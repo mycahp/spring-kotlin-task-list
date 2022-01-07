@@ -1,6 +1,5 @@
 package com.mycahpleasant.spring_kotlin_task_list.models.persistence
 
-import com.fasterxml.jackson.annotation.JsonManagedReference
 import javax.persistence.*
 
 @Entity
@@ -8,7 +7,8 @@ import javax.persistence.*
 data class Task(
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    val taskId: Long,
+    @Column(nullable = true)
+    val taskId: Long? = null,
 
     @Column(nullable = false)
     val description: String,
@@ -20,5 +20,5 @@ data class Task(
         name = "projectId",
         nullable = true
     )
-    val project: Project?
+    val project: Project? = null
 )

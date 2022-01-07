@@ -1,76 +1,51 @@
 package com.mycahpleasant.spring_kotlin_task_list.controllers
 
-import com.mycahpleasant.spring_kotlin_task_list.dao.ProjectRepository
-import com.mycahpleasant.spring_kotlin_task_list.dao.TaskRepository
-import com.mycahpleasant.spring_kotlin_task_list.models.persistence.Project
-import com.mycahpleasant.spring_kotlin_task_list.models.rest.ProjectRest
-import com.mycahpleasant.spring_kotlin_task_list.models.rest.TaskRest
+import com.mycahpleasant.spring_kotlin_task_list.dto.project.ProjectRESTRequest
+import com.mycahpleasant.spring_kotlin_task_list.dto.project.ProjectRESTResponse
+import com.mycahpleasant.spring_kotlin_task_list.services.ProjectService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.util.ObjectUtils
 import org.springframework.web.bind.annotation.*
-import java.lang.IllegalArgumentException
 
 @RestController
 class ProjectsController @Autowired constructor(
-    val projectRepository: ProjectRepository,
-    val taskRepository: TaskRepository
+    val projectService: ProjectService
 ) {
 
     @GetMapping("/projects")
-    fun getProjects(): ResponseEntity<List<ProjectRest>> {
-        return ResponseEntity<List<ProjectRest>>(projectRepository.findAll().map { it ->
-            ProjectRest(
-                projectId = it.projectId,
-                name = it.name,
-                tasks = it.tasks.map {
-                    TaskRest(
-                        taskId = it.taskId,
-                        description = it.description,
-                        completed = it.completed,
-                        project = null
-                    )
-                }
-            )
+    fun getProjects(): ResponseEntity<List<ProjectRESTResponse>> {
+        return ResponseEntity<List<ProjectRESTResponse>>(projectService.getAllProjects().map {
+            projectService.convertToRESTResponse(it)
         }, HttpStatus.OK)
     }
 
     @GetMapping("/projects/{id}", produces = ["application/json"])
-    fun getProjectById(@PathVariable("id") projectId: Long): ResponseEntity<ProjectRest> {
-        val project = projectRepository.findById(projectId).orElseThrow {
-            IllegalArgumentException("Project not found")
-        }
-
-        return ResponseEntity<ProjectRest>(
-            ProjectRest(
-                projectId = project.projectId,
-                name = project.name,
-                tasks = project.tasks.map {
-                    TaskRest(
-                        taskId = it.taskId,
-                        description = it.description,
-                        completed = it.completed,
-                        project = null
-                    )
-                }
+    fun getProjectById(@PathVariable("id") projectId: Long): ResponseEntity<ProjectRESTResponse> {
+        return ResponseEntity<ProjectRESTResponse>(
+            projectService.convertToRESTResponse(
+                projectService.getProject(projectId)
             ), HttpStatus.OK
         )
     }
 
     @PostMapping("/projects", produces = ["application/json"])
-    fun createProject(@RequestBody project: Project): ResponseEntity<ProjectRest> {
-        val newProject = projectRepository.save(project)
+    fun createProject(@RequestBody project: ProjectRESTRequest): ResponseEntity<ProjectRESTResponse> {
+        return ResponseEntity<ProjectRESTResponse>(
+            projectService.convertToRESTResponse(
+                projectService.saveProject(project)
+            ), HttpStatus.OK
+        )
+    }
 
-        if (ObjectUtils.isEmpty(newProject)) {
-            return ResponseEntity<ProjectRest>(HttpStatus.BAD_REQUEST)
-        }
-
-        return ResponseEntity<ProjectRest>(
-            ProjectRest(
-                projectId = newProject.projectId,
-                name = newProject.name,
-                tasks = listOf()
+    @PutMapping("/projects/{projectId}")
+    fun updateProject(
+        @PathVariable("projectId") projectId: Long,
+        @RequestBody project: ProjectRESTRequest
+    ): ResponseEntity<ProjectRESTResponse> {
+        return ResponseEntity<ProjectRESTResponse>(
+            projectService.convertToRESTResponse(
+                projectService.updateProject(projectId, project)
             ), HttpStatus.OK
         )
     }
@@ -79,40 +54,15 @@ class ProjectsController @Autowired constructor(
     fun mapTaskToProject(
         @PathVariable("projectId") projectId: Long,
         @PathVariable("taskId") taskId: Long
-    ): ResponseEntity<ProjectRest> {
-        val project = projectRepository.findById(projectId).orElseThrow {
-            IllegalArgumentException("Project not found")
-        }
-
-        val task = taskRepository.findById(taskId).orElseThrow {
-            IllegalArgumentException("Task not found")
-        }
-
-        project.tasks.add(task)
-        projectRepository.save(project)
-
-        return ResponseEntity<ProjectRest>(
-            ProjectRest(
-                projectId = project.projectId,
-                name = project.name,
-                tasks = project.tasks.map {
-                    TaskRest(
-                        taskId = it.taskId,
-                        description = it.description,
-                        completed = it.completed,
-                        project = null
-                    )
-                }), HttpStatus.OK
+    ): ResponseEntity<ProjectRESTResponse> {
+        return ResponseEntity<ProjectRESTResponse>(
+            projectService.convertToRESTResponse(projectService.addTaskToProject(projectId, taskId)), HttpStatus.OK
         )
     }
 
     @DeleteMapping("/projects/{id}", produces = ["application/json"])
     fun deleteProject(@PathVariable("id") projectId: Long): ResponseEntity<Void> {
-        projectRepository.findById(projectId).orElseThrow {
-            IllegalArgumentException("Project not found")
-        }
-
-        projectRepository.deleteById(projectId)
+        projectService.deleteProject(projectId)
 
         return ResponseEntity<Void>(HttpStatus.NO_CONTENT)
     }
