@@ -13,12 +13,6 @@ data class Project(
     @Column(unique = true, nullable = false)
     val name: String,
 
-    @OneToMany(cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "PROJECT_TASK",
-        joinColumns = [JoinColumn(name = "projectId")],
-        inverseJoinColumns = [JoinColumn(name = "taskId")]
-    )
-    @JsonBackReference
+    @OneToMany(mappedBy = "project", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
     val tasks: MutableSet<Task> = hashSetOf()
 )

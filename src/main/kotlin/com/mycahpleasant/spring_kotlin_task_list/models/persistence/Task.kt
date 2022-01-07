@@ -1,5 +1,6 @@
 package com.mycahpleasant.spring_kotlin_task_list.models.persistence
 
+import com.fasterxml.jackson.annotation.JsonManagedReference
 import javax.persistence.*
 
 @Entity
@@ -13,4 +14,11 @@ data class Task(
     val description: String,
 
     val completed: Boolean = false,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+        name = "projectId",
+        nullable = true
+    )
+    val project: Project?
 )

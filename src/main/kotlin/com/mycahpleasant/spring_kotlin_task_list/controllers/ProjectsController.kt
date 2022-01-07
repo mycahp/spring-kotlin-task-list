@@ -28,7 +28,8 @@ class ProjectsController @Autowired constructor(
                     TaskRest(
                         taskId = it.taskId,
                         description = it.description,
-                        completed = it.completed
+                        completed = it.completed,
+                        project = null
                     )
                 }
             )
@@ -49,7 +50,8 @@ class ProjectsController @Autowired constructor(
                     TaskRest(
                         taskId = it.taskId,
                         description = it.description,
-                        completed = it.completed
+                        completed = it.completed,
+                        project = null
                     )
                 }
             ), HttpStatus.OK
@@ -97,7 +99,8 @@ class ProjectsController @Autowired constructor(
                     TaskRest(
                         taskId = it.taskId,
                         description = it.description,
-                        completed = it.completed
+                        completed = it.completed,
+                        project = null
                     )
                 }), HttpStatus.OK
         )
